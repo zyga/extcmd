@@ -9,30 +9,34 @@ which is a composition of a simple Transform that prepends the stream name and
 a Redirect that, by default, just writes each line back to the corresponding
 stream.
 
-Everything is encapsulated in a single module, extcmd
->>> import extcmd
->>> import re
+Everything is encapsulated in a single module, extcmd::
+
+    >>> import extcmd
+    >>> import re
 
 Create our sink object, it will simply write stuff back to the right stream
-while prepending the stream name to each line for easy inspection (and fun)
->>> sink = extcmd.Transform(lambda stream_name, line: "{0}: {1}".format(stream_name, line),
-...                         extcmd.Redirect())
->>> better_subprocess = extcmd.ExternalCommandWithDelegate(
-...     extcmd.Chain([
-...         sink,  # pass one copy directly to the sink
-...         sink,  # pass second copy directly to the sink
-...         # transform a third copy with regular expression
-...         extcmd.Transform(lambda stream_name, line: re.sub("hello", "bye", line, flags=re.I), sink),
-...     ])
-... )
+while prepending the stream name to each line for easy inspection (and fun)::
+
+    >>> sink = extcmd.Transform(lambda stream_name, line: "{0}: {1}".format(stream_name, line),
+    ...                         extcmd.Redirect())
+    >>> better_subprocess = extcmd.ExternalCommandWithDelegate(
+    ...     extcmd.Chain([
+    ...         sink,  # pass one copy directly to the sink
+    ...         sink,  # pass second copy directly to the sink
+    ...         # transform a third copy with regular expression
+    ...         extcmd.Transform(lambda stream_name, line: re.sub("hello", "bye", line, flags=re.I), sink),
+    ...     ])
+    ... )
 
 After constructing that chain we can just call commands. As in subprocess there
-is also check_call() which raises an exception on failure.
->>> returncode = better_subprocess.call(['echo', 'Hello World'])
-stdout: Hello World
-stdout: Hello World
-stdout: bye World
+is also check_call() which raises an exception on failure::
 
-You can still look at returncode, it is returned from each call()
->>> returncode
-0
+    >>> returncode = better_subprocess.call(['echo', 'Hello World'])
+    stdout: Hello World
+    stdout: Hello World
+    stdout: bye World
+
+You can still look at returncode, it is returned from each call()::
+
+    >>> returncode
+    0
