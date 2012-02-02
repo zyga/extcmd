@@ -31,7 +31,7 @@ setup(
     test_suite='extcmd_test.test_suite',
     license="GNU LGPLv3",
     classifiers=[
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: GNU General Public License (GPL)",
         "Operating System :: OS Independent",
