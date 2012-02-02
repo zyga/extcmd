@@ -1,4 +1,6 @@
-# Copyright (c) 2010, 2011 Linaro
+# Copyright (c) 2010-2012 Linaro Limited
+#
+# Author: Zygmunt Krynicki <zygmunt.krynicki@linaro.org>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
