@@ -157,7 +157,7 @@ class SafeDelegate(IDelegate):
         Call on_line() on the wrapped delegate if supported
         """
         if hasattr(self._delegate, "on_line"):
-            self._delegate.on_line(stram_name, line)
+            self._delegate.on_line(stream_name, line)
 
     def on_end(self, returncode):
         """
