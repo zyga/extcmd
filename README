@@ -40,3 +40,21 @@ You can still look at returncode, it is returned from each call()::
 
     >>> returncode
     0
+
+The returncode is also passed to each delegate that supports the on_end() method
+
+    >>> class ReturnCode(extcmd.DelegateBase):
+    ...     def on_end(self, returncode):
+    ...         print "Return code is", returncode
+    >>> extcmd.ExternalCommandWithDelegate(ReturnCode()).call(['false'])
+    Return code is 1
+    1
+
+Each started program is also passed to the on_start() method
+
+    >>> class VerboseStart(extcmd.DelegateBase):
+    ...     def on_begin(self, args, kwargs):
+    ...         print "Starting", args, kwargs
+    >>> extcmd.ExternalCommandWithDelegate(VerboseStart()).call(['true'])
+    Starting (['true'],) {}
+    0
