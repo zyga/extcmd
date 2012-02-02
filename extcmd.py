@@ -24,6 +24,7 @@ __version__ = (1, 0, 0, "beta", 2)
 
 from Queue import Queue
 import abc
+import signal
 import subprocess
 import sys
 import threading
@@ -202,13 +203,14 @@ class ExternalCommandWithDelegate(ExternalCommand):
 
     """
 
-    def __init__(self, delegate):
+    def __init__(self, delegate, killsig=signal.SIGINT):
         """
         Set the delegate helper. Technically it needs to have a 'on_line()'
         method. For actual example code look at :class:`Tee`.
         """
         self._queue = Queue()
         self._delegate = SafeDelegate.wrap_if_needed(delegate)
+        self._killsig = killsig
 
     def call(self, *args, **kwargs):
         """
@@ -220,10 +222,15 @@ class ExternalCommandWithDelegate(ExternalCommand):
             KILL the invoked subprocess. This is handled by
             _on_keyboard_interrupt() method.
         """
+        # Notify that the process is about to start
         self._delegate.on_begin(args, kwargs)
+        # Setup stodut/stderr redirection
         kwargs['stdout'] = subprocess.PIPE
         kwargs['stderr'] = subprocess.PIPE
+        # Start the process
         proc = self._popen(*args, **kwargs)
+        # Setup all worker threads. By now the pipes have been created and
+        # proc.stdout/proc.stderr point to open pipe objects.
         stdout_reader = threading.Thread(
             target=self._read_stream,
             args=(proc.stdout, "stdout"))
@@ -232,24 +239,35 @@ class ExternalCommandWithDelegate(ExternalCommand):
             args=(proc.stderr, "stderr"))
         queue_worker = threading.Thread(
             target=self._drain_queue)
+        # Start all workers
         queue_worker.start()
         stdout_reader.start()
         stderr_reader.start()
         try:
-            proc.wait()
-        except KeyboardInterrupt:
-            self._delegate.on_interrupt()
-            self._on_keyboard_interrupt(proc)
+            while True:
+                try:
+                    # Wait for the process to finish
+                    proc.wait()
+                    # Break out of the endless loop if it does
+                    break
+                except KeyboardInterrupt:
+                    # On interrupt send a signal to the process
+                    self._on_keyboard_interrupt(proc)
+                    # And send a notification about tihs 
+                    self._delegate.on_interrupt()
         finally:
+            # Tell the queue worker to shut down
+            self._queue.put(None)
+            # Wait until all worker threads shut down
             stdout_reader.join()
             stderr_reader.join()
-            self._queue.put(None)
             queue_worker.join()
+        # Notify that the process has finished
         self._delegate.on_end(proc.returncode)
         return proc.returncode
 
     def _on_keyboard_interrupt(self, proc):
-        proc.kill()
+        proc.send_signal(self._killsig)
 
     def _read_stream(self, stream, stream_name):
         for line in iter(stream.readline, ''):
