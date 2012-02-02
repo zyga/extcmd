@@ -17,12 +17,13 @@
 
 """
 A convenience wrapper around subprocess.Popen that allows the caller to
-easily observe all stdout/stderr activity in real time. 
+easily observe all stdout/stderr activity in real time.
 """
 
-__version__ = (1, 0, 0, "beta", 1)
+__version__ = (1, 0, 0, "beta", 2)
 
 from Queue import Queue
+import abc
 import subprocess
 import sys
 import threading
@@ -41,6 +42,8 @@ class ExternalCommand(object):
     def call(self, *args, **kwargs):
         """
         Invoke a sub-command and wait for it to finish.
+
+        Returns the command error code
         """
         proc = self._popen(*args, **kwargs)
         proc.wait()
@@ -66,10 +69,125 @@ class ExternalCommand(object):
         return subprocess.Popen(*args, **kwargs)
 
 
+class IDelegate(object):
+    """
+    Interface class for delegates compatible with ExtrnalCommandWithDelegate
+    """
+
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractmethod
+    def on_begin(self, args, kwargs):
+        """
+        Callback invoked when a command begins
+        """
+
+    @abc.abstractmethod
+    def on_line(self, stream_name, line):
+        """
+        Callback invoked for each line of the output
+        """
+
+    @abc.abstractmethod
+    def on_end(self, returncode):
+        """
+        Callback invoked when a command ends
+        """
+
+    @abc.abstractmethod
+    def on_interrupt(self):
+        """
+        Callback invoked when the user triggers KeyboardInterrupt
+        """
+
+
+class DelegateBase(IDelegate):
+    """
+    An IDelegate implementation that does nothing
+    """
+
+    def on_begin(self, args, kwargs):
+        """
+        Do nothing
+        """
+
+    def on_line(self, stream_name, line):
+        """
+        Do nothing
+        """
+
+    def on_end(self, returncode):
+        """
+        Do nothing
+        """
+
+    def on_interrupt(self):
+        """
+        Do nothing
+        """
+
+
+class SafeDelegate(IDelegate):
+    """
+    Delegate that checks for missing methods in another delegate
+
+    This class is useful when your delegate is of the older type (it may just
+    have the on_line method) but you don't want to provide all of the dummy
+    methods.
+
+    It is automatically used by ExternalCommandWithDelegate, Chain and
+    Transform classes
+    """
+
+    def __init__(self, delegate):
+        if isinstance(delegate, IDelegate):
+            raise TypeError(
+                "Using SafeDelegate with IDelegate subclass makes no sense")
+        self._delegate = delegate
+
+    def on_begin(self, args, kwargs):
+        """
+        Call on_begin() on the wrapped delegate if supported
+        """
+        if hasattr(self._delegate, "on_begin"):
+            self._delegate.on_begin(args, kwargs)
+
+    def on_line(self, stream_name, line):
+        """
+        Call on_line() on the wrapped delegate if supported
+        """
+        if hasattr(self._delegate, "on_line"):
+            self._delegate.on_line(stram_name, line)
+
+    def on_end(self, returncode):
+        """
+        Call on_end() on the wrapped delegate if supported
+        """
+        if hasattr(self._delegate, "on_end"):
+            self._delegate.on_end(returncode)
+
+    def on_interrupt(self):
+        """
+        Call on_interrupt() on the wrapped delegate if supported
+        """
+        if hasattr(self._delegate, "on_interrupt"):
+            self._delegate.on_interrupt()
+
+    @classmethod
+    def wrap_if_needed(cls, delegate):
+        """
+        Wrap another delegate in SafeDelegate if needed
+        """
+        if isinstance(delegate, IDelegate):
+            return delegate
+        else:
+            return cls(delegate)
+
+
 class ExternalCommandWithDelegate(ExternalCommand):
     """
-    The actually interesting subclass of ExternalCommand..
-    
+    The actually interesting subclass of ExternalCommand.
+
     Here both stdout and stderr are unconditionally captured and parsed for
     line-by-line output that is then passed to a helper delegate object.
 
@@ -90,7 +208,7 @@ class ExternalCommandWithDelegate(ExternalCommand):
         method. For actual example code look at :class:`Tee`.
         """
         self._queue = Queue()
-        self._delegate = delegate
+        self._delegate = SafeDelegate.wrap_if_needed(delegate)
 
     def call(self, *args, **kwargs):
         """
@@ -102,6 +220,7 @@ class ExternalCommandWithDelegate(ExternalCommand):
             KILL the invoked subprocess. This is handled by
             _on_keyboard_interrupt() method.
         """
+        self._delegate.on_begin(args, kwargs)
         kwargs['stdout'] = subprocess.PIPE
         kwargs['stderr'] = subprocess.PIPE
         proc = self._popen(*args, **kwargs)
@@ -113,19 +232,20 @@ class ExternalCommandWithDelegate(ExternalCommand):
             args=(proc.stderr, "stderr"))
         queue_worker = threading.Thread(
             target=self._drain_queue)
-
         queue_worker.start()
         stdout_reader.start()
         stderr_reader.start()
         try:
             proc.wait()
         except KeyboardInterrupt:
+            self._delegate.on_interrupt()
             self._on_keyboard_interrupt(proc)
         finally:
             stdout_reader.join()
             stderr_reader.join()
             self._queue.put(None)
             queue_worker.join()
+        self._delegate.on_end(proc.returncode)
         return proc.returncode
 
     def _on_keyboard_interrupt(self, proc):
@@ -144,13 +264,30 @@ class ExternalCommandWithDelegate(ExternalCommand):
             self._delegate.on_line(*args)
 
 
-class Chain(object):
+class Chain(IDelegate):
     """
-    Simple chaining output handler.
+    Delegate for using a chain of delegates.
+
+    Each method is invoked for all the delegates. This make it easy to compose
+    the desired effect out of a list of smaller specialized classes.
     """
 
     def __init__(self, delegate_list):
-        self.delegate_list = delegate_list
+        """
+        Construct a Chain of delegates.
+
+        Each delegate is wrapped in :class:`SafeDelegate` if needed
+        """
+        self.delegate_list = [
+            SafeDelegate.wrap_if_needed(delegate)
+            for delegate in delegate_list]
+
+    def on_begin(self, args, kwargs):
+        """
+        Call the on_begin() method on each delegate in the list
+        """
+        for delegate in self.delegate_list:
+            delegate.on_begin(args, kwargs)
 
     def on_line(self, stream_name, line):
         """
@@ -159,19 +296,33 @@ class Chain(object):
         for delegate in self.delegate_list:
             delegate.on_line(stream_name, line)
 
+    def on_end(self, returncode):
+        """
+        Call the on_end() method on each delegate in the list
+        """
+        for delegate in self.delegate_list:
+            delegate.on_end(returncode)
 
-class Redirect(object):
+    def on_interrupt(self):
+        """
+        Call the on_interrupt() method on each delegate in the list
+        """
+        for delegate in self.delegate_list:
+            delegate.on_interrupt()
+
+
+class Redirect(DelegateBase):
     """
     Redirect each line to desired stream.
     """
 
     def __init__(self, stdout=None, stderr=None):
         """
-        Set stdout and stderr streams for writing the output to.
-        If left blank then sys.stdout and sys.stderr are used instead.
+        Set ``stdout`` and ``stderr`` streams for writing the output to.  If
+        left blank then ``sys.stdout`` and ``sys.stderr`` are used instead.
         """
-        self.stdout = stdout or sys.stdout
-        self.stderr = stderr or sys.stderr
+        self._stdout = stdout or sys.stdout
+        self._stderr = stderr or sys.stderr
 
     def on_line(self, stream_name, line):
         """
@@ -179,30 +330,31 @@ class Redirect(object):
         """
         assert stream_name == 'stdout' or stream_name == 'stderr'
         if stream_name == 'stdout':
-            self.stdout.write(line)
+            self._stdout.write(line)
         else:
-            self.stderr.write(line)
+            self._stderr.write(line)
 
 
-class Transform(object):
+class Transform(DelegateBase):
     """
-    Transformation fiter
+    Transformation filter for output lines
 
     Allows to transform each line before being passed down to subsequent
-    delegate.
+    delegate. The delegate is automatically wrapped in :class:`SafeDelegate` if
+    needed.
     """
 
     def __init__(self, callback, delegate):
         """
         Set the callback and subsequent delegate.
         """
-        self.callback = callback
-        self.delegate = delegate
+        self._callback = callback
+        self._delegate = SafeDelegate.wrap_if_needed(delegate)
 
     def on_line(self, stream_name, line):
         """
         Transform each line by calling callback(stream_name, line) and pass it
         down to the subsequent delegate.
         """
-        transformed_line = self.callback(stream_name, line)
-        self.delegate.on_line(stream_name, transformed_line)
+        transformed_line = self._callback(stream_name, line)
+        self._delegate.on_line(stream_name, transformed_line)
