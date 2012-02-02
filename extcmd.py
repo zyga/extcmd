@@ -20,7 +20,7 @@ A convenience wrapper around subprocess.Popen that allows the caller to
 easily observe all stdout/stderr activity in real time.
 """
 
-__version__ = (1, 0, 0, "beta", 2)
+__version__ = (1, 0, 0, "beta", 3)
 
 from Queue import Queue
 import abc
