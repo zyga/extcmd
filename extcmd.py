@@ -232,13 +232,10 @@ class ExternalCommandWithDelegate(ExternalCommand):
         # Setup all worker threads. By now the pipes have been created and
         # proc.stdout/proc.stderr point to open pipe objects.
         stdout_reader = threading.Thread(
-            target=self._read_stream,
-            args=(proc.stdout, "stdout"))
+            target=self._read_stream, args=(proc.stdout, "stdout"))
         stderr_reader = threading.Thread(
-            target=self._read_stream,
-            args=(proc.stderr, "stderr"))
-        queue_worker = threading.Thread(
-            target=self._drain_queue)
+            target=self._read_stream, args=(proc.stderr, "stderr"))
+        queue_worker = threading.Thread(target=self._drain_queue)
         # Start all workers
         queue_worker.start()
         stdout_reader.start()
@@ -256,11 +253,11 @@ class ExternalCommandWithDelegate(ExternalCommand):
                     # And send a notification about tihs 
                     self._delegate.on_interrupt()
         finally:
-            # Tell the queue worker to shut down
-            self._queue.put(None)
             # Wait until all worker threads shut down
             stdout_reader.join()
             stderr_reader.join()
+            # Tell the queue worker to shut down
+            self._queue.put(None)
             queue_worker.join()
         # Notify that the process has finished
         self._delegate.on_end(proc.returncode)
