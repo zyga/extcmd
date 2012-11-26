@@ -267,7 +267,10 @@ class ExternalCommandWithDelegate(ExternalCommand):
         proc.send_signal(self._killsig)
 
     def _read_stream(self, stream, stream_name):
-        for line in iter(stream.readline, ''):
+        while True:
+            line = stream.readline()
+            if len(line) == 0:
+                break
             cmd = (stream_name, line)
             self._queue.put(cmd)
 
