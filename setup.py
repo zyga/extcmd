@@ -21,7 +21,7 @@ from setuptools import setup
 
 setup(
     name='extcmd',
-    version=":versiontools:extcmd:",
+    version='1.0',
     author='Zygmunt Krynicki',
     author_email='zkrynicki@gmail.com',
     url='https://launchpad.net/extcmd',
@@ -38,5 +38,4 @@ setup(
         "Programming Language :: Python :: 2.6",
         "Programming Language :: Python :: 2.7",
     ],
-    setup_requires=['versiontools >= 1.4'],
     zip_safe=True)
