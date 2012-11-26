@@ -30,6 +30,7 @@ setup(
     py_modules=['extcmd'],
     test_suite='extcmd_test.test_suite',
     license="GNU LGPLv3",
+    use_2to3=True,
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
