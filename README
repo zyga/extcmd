@@ -172,7 +172,7 @@ code
     ... # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
     ...
-    subprocess.CalledProcessError: Command '['false']' returned non-zero exit status 1
+    CalledProcessError: Command '['false']' returned non-zero exit status 1
 
 If you don't use check_call You can also look at the return code that is
 returned from each call(). The returncode is also passed to each delegate that
