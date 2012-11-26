@@ -410,3 +410,45 @@ class Decode(Transform):
         Decode each line with the configured encoding
         """
         return line.decode(self._encoding)
+
+
+class Encode(Transform):
+    """
+    Encode output lines into the specified bytes encoding
+
+    Allows to work with Unicode strings on the inside of the application and
+    bytes on the outside, as it should be. Especially useful in python 3.
+    """
+
+    def __init__(self, delegate, encoding='UTF-8'):
+        """
+        Set the callback and subsequent delegate.
+        """
+        super(Encode, self).__init__(self._encode, delegate)
+        self._encoding = encoding
+
+    def _encode(self, stream_name, line):
+        """
+        Decode each line with the configured encoding
+        """
+        return line.encode(self._encoding)
+
+
+class EncodeInPython2(Encode):
+    """
+    Encode Unicode strings to byte strings, but only in python2
+
+    This class is kind of awkward but it solves one interesting problem in the
+    python3 transition, that stdout/stderr are opened in text mode by default
+    (unless redirected). This means that you can and indeed must write Unicode
+    strings to that stream, not byte strings.
+    """
+
+    def _encode(self, stream_name, line):
+        """
+        Decode each line with the configured encoding
+        """
+        if sys.version_info[0] == 2:
+            return line.encode(self._encoding)
+        else:
+            return line
