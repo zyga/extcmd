@@ -250,7 +250,7 @@ class ExternalCommandWithDelegate(ExternalCommand):
                 except KeyboardInterrupt:
                     # On interrupt send a signal to the process
                     self._on_keyboard_interrupt(proc)
-                    # And send a notification about tihs 
+                    # And send a notification about this
                     self._delegate.on_interrupt()
         finally:
             # Wait until all worker threads shut down
