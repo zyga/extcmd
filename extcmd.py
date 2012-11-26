@@ -334,13 +334,16 @@ class Redirect(DelegateBase):
     Redirect each line to desired stream.
     """
 
-    def __init__(self, stdout=None, stderr=None):
+    def __init__(self, stdout=None, stderr=None, close_stdout_on_end=False,
+                 close_stderr_on_end=False):
         """
         Set ``stdout`` and ``stderr`` streams for writing the output to.  If
         left blank then ``sys.stdout`` and ``sys.stderr`` are used instead.
         """
         self._stdout = stdout or sys.stdout
         self._stderr = stderr or sys.stderr
+        self._close_stdout_on_end = close_stdout_on_end
+        self._close_stderr_on_end = close_stderr_on_end
 
     def on_line(self, stream_name, line):
         """
@@ -351,6 +354,15 @@ class Redirect(DelegateBase):
             self._stdout.write(line)
         else:
             self._stderr.write(line)
+
+    def on_end(self, returncode):
+        """
+        Close the output streams if requested
+        """
+        if self._close_stdout_on_end:
+            self._stdout.close()
+        if self._close_stderr_on_end:
+            self._stderr.close()
 
 
 class Transform(DelegateBase):
