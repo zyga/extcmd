@@ -24,7 +24,7 @@ setup(
     version='1.0',
     author='Zygmunt Krynicki',
     author_email='zkrynicki@gmail.com',
-    url='https://launchpad.net/extcmd',
+    url='https://github.com/zyga/extcmd',
     description='External Command - subprocess with advanced output processing',
     long_description=open("README").read(),
     py_modules=['extcmd'],
