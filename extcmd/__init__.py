@@ -605,6 +605,12 @@ class Transform(DelegateBase):
         transformed_line = self._callback(stream_name, line)
         self._delegate.on_line(stream_name, transformed_line)
 
+    def on_begin(self, args, kwargs):
+        self._delegate.on_begin(args, kwargs)
+
+    def on_end(self, returncode):
+        self._delegate.on_end(returncode)
+
 
 class Decode(Transform):
     """
