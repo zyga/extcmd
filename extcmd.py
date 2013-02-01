@@ -146,6 +146,10 @@ class SafeDelegate(IDelegate):
                 "Using SafeDelegate with IDelegate subclass makes no sense")
         self._delegate = delegate
 
+    def __repr__(self):
+        return "<{} wrapping {!r}>".format(
+            self.__class__.__name__, self._delegate)
+
     def on_begin(self, args, kwargs):
         """
         Call on_begin() on the wrapped delegate if supported
@@ -300,6 +304,10 @@ class Chain(IDelegate):
             SafeDelegate.wrap_if_needed(delegate)
             for delegate in delegate_list]
 
+    def __repr__(self):
+        return "<{} [{!r}]>".format(
+            self.__class__.__name__, self.delegate_list)
+
     def on_begin(self, args, kwargs):
         """
         Call the on_begin() method on each delegate in the list
@@ -345,6 +353,11 @@ class Redirect(DelegateBase):
         self._close_stdout_on_end = close_stdout_on_end
         self._close_stderr_on_end = close_stderr_on_end
 
+    def __repr__(self):
+        return "<{} stdout:{!r} stderr:{!r}>".format(
+            self.__class__.__name__,
+            self._stdout, self._stderr)
+
     def on_line(self, stream_name, line):
         """
         Write each line, verbatim, to the desired stream.
@@ -381,6 +394,10 @@ class Transform(DelegateBase):
         self._callback = callback
         self._delegate = SafeDelegate.wrap_if_needed(delegate)
 
+    def __repr__(self):
+        return "<{} callback:{!r} delegate:{!r}>".format(
+            self.__class__.__name__, self._callback, self._delegate)
+
     def on_line(self, stream_name, line):
         """
         Transform each line by calling callback(stream_name, line) and pass it
@@ -405,6 +422,10 @@ class Decode(Transform):
         super(Decode, self).__init__(self._decode, delegate)
         self._encoding = encoding
 
+    def __repr__(self):
+        return "<{} encoding:{!r} delegate:{!r}>".format(
+            self.__class__.__name__, self._encoding, self._delegate)
+
     def _decode(self, stream_name, line):
         """
         Decode each line with the configured encoding
@@ -426,6 +447,10 @@ class Encode(Transform):
         """
         super(Encode, self).__init__(self._encode, delegate)
         self._encoding = encoding
+
+    def __repr__(self):
+        return "<{} encoding:{!r} delegate:{!r}>".format(
+            self.__class__.__name__, self._encoding, self._delegate)
 
     def _encode(self, stream_name, line):
         """
