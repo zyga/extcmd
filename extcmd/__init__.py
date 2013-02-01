@@ -219,7 +219,7 @@ Each started program is also passed to the on_start() method::
     Starting (['true'],) {}
 """
 
-__version__ = (1, 0, 0, "beta", 4)
+__version__ = (1, 0, 1, "final", 0)
 
 from Queue import Queue
 import abc
