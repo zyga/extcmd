@@ -21,7 +21,7 @@ from setuptools import setup
 
 setup(
     name='extcmd',
-    version='1.0',
+    version='1.0.1',
     author='Zygmunt Krynicki',
     author_email='zkrynicki@gmail.com',
     url='https://github.com/zyga/extcmd',
