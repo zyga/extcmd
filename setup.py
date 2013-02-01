@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # Copyright (c) 2010-2012 Linaro Limited
+# Copyright (c) 2013 Canonical Ltd.
 
 # Author: Zygmunt Krynicki <zygmunt.krynicki@linaro.org>
 #
@@ -21,14 +22,16 @@ from setuptools import setup
 
 setup(
     name='extcmd',
-    version='1.0',
+    version='1.0.1',
     author='Zygmunt Krynicki',
     author_email='zkrynicki@gmail.com',
-    url='https://launchpad.net/extcmd',
+    url='https://github.com/zyga/extcmd',
     description='External Command - subprocess with advanced output processing',
-    long_description=open("README").read(),
-    py_modules=['extcmd'],
-    test_suite='extcmd_test.test_suite',
+    long_description=(
+        "A convenience wrapper around subprocess.Popen that allows the caller"
+        " to easily observe all stdout/stderr activity in real time."),
+    packages=['extcmd'],
+    test_suite='extcmd.test.test_suite',
     license="GNU LGPLv3",
     use_2to3=True,
     classifiers=[
