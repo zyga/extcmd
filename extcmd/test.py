@@ -69,3 +69,31 @@ class ReprTests(unittest.TestCase):
         self.assertEqual(
             repr(obj), ("<Encode encoding:'UTF-8'"
                         " delegate:<SafeDelegate wrapping <Dummy>>>"))
+
+
+class Detector:
+    """
+    Auxiliary class that records if on_begin() and on_end() got called
+    """
+
+    on_begin_called = False
+    on_end_called = False
+
+    def on_begin(self, args, kwargs):
+        self.on_begin_called = True
+
+    def on_end(self, returncode):
+        self.on_end_called = True
+
+
+class PropagationTests(unittest.TestCase):
+
+    def test_transform(self):
+        detector = Detector()
+        self.assertEqual(detector.on_begin_called, False)
+        self.assertEqual(detector.on_end_called, False)
+        obj = extcmd.Transform(lambda data: data, detector)
+        obj.on_begin(None, None)
+        obj.on_end(None)
+        self.assertEqual(detector.on_begin_called, True)
+        self.assertEqual(detector.on_end_called, True)
