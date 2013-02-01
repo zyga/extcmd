@@ -170,7 +170,7 @@ still displaying it back to the user::
 So this example is actually more interesting, unlike before we don't decode
 _all_ data, only the data that is displayed, the stdout.log file will contain a
 verbatim copy of all the bytes that were produced by the called process::
-    
+
     >>> import os
     >>> assert os.path.exists("stdout.log")
     >>> with open("stdout.log", "rt") as stream:
@@ -504,7 +504,7 @@ class Chain(IDelegate):
             for delegate in delegate_list]
 
     def __repr__(self):
-        return "<{0} [{1!r}]>".format(
+        return "<{0} {1!r}>".format(
             self.__class__.__name__, self.delegate_list)
 
     def on_begin(self, args, kwargs):
