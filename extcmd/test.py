@@ -17,6 +17,8 @@
 
 import doctest
 
+import extcmd
+
 
 def test_suite():
-    return doctest.DocFileSuite("README")
+    return doctest.DocTestSuite(extcmd)
