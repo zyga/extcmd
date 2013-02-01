@@ -16,9 +16,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import doctest
+import unittest
 
 import extcmd
 
 
 def test_suite():
-    return doctest.DocTestSuite(extcmd)
+    suite = unittest.defaultTestLoader.loadTestsFromName("extcmd.test")
+    suite.addTests(doctest.DocTestSuite(extcmd))
+    return suite
