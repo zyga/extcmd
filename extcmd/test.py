@@ -25,3 +25,47 @@ def test_suite():
     suite = unittest.defaultTestLoader.loadTestsFromName("extcmd.test")
     suite.addTests(doctest.DocTestSuite(extcmd))
     return suite
+
+
+class Dummy:
+    """
+    Dummy class that has deterministic __repr__()
+    """
+
+    def __repr__(self):
+        return "<Dummy>"
+
+
+class ReprTests(unittest.TestCase):
+
+    def test_safe_delegate(self):
+        obj = extcmd.SafeDelegate(Dummy())
+        self.assertEqual(repr(obj), "<SafeDelegate wrapping <Dummy>>")
+
+    def test_chain(self):
+        obj = extcmd.Chain([Dummy()])
+        self.assertEqual(
+            repr(obj), "<Chain [<SafeDelegate wrapping <Dummy>>]>")
+
+    def test_redirect(self):
+        obj = extcmd.Redirect(stdout=Dummy(), stderr=Dummy())
+        self.assertEqual(
+            repr(obj), "<Redirect stdout:<Dummy> stderr:<Dummy>>")
+
+    def test_transform(self):
+        obj = extcmd.Transform(callback=Dummy(), delegate=Dummy())
+        self.assertEqual(
+            repr(obj), ("<Transform callback:<Dummy> delegate:<SafeDelegate"
+                        " wrapping <Dummy>>>"))
+
+    def test_decode(self):
+        obj = extcmd.Decode(delegate=Dummy())
+        self.assertEqual(
+            repr(obj), ("<Decode encoding:'UTF-8'"
+                        " delegate:<SafeDelegate wrapping <Dummy>>>"))
+
+    def test_encode(self):
+        obj = extcmd.Encode(delegate=Dummy())
+        self.assertEqual(
+            repr(obj), ("<Encode encoding:'UTF-8'"
+                        " delegate:<SafeDelegate wrapping <Dummy>>>"))
