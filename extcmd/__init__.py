@@ -504,7 +504,7 @@ class Chain(IDelegate):
             for delegate in delegate_list]
 
     def __repr__(self):
-        return "<{0} [{1!r}]>".format(
+        return "<{0} {1!r}>".format(
             self.__class__.__name__, self.delegate_list)
 
     def on_begin(self, args, kwargs):
