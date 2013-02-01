@@ -147,7 +147,7 @@ class SafeDelegate(IDelegate):
         self._delegate = delegate
 
     def __repr__(self):
-        return "<{} wrapping {!r}>".format(
+        return "<{0} wrapping {1!r}>".format(
             self.__class__.__name__, self._delegate)
 
     def on_begin(self, args, kwargs):
@@ -305,7 +305,7 @@ class Chain(IDelegate):
             for delegate in delegate_list]
 
     def __repr__(self):
-        return "<{} [{!r}]>".format(
+        return "<{0} [{1!r}]>".format(
             self.__class__.__name__, self.delegate_list)
 
     def on_begin(self, args, kwargs):
@@ -354,7 +354,7 @@ class Redirect(DelegateBase):
         self._close_stderr_on_end = close_stderr_on_end
 
     def __repr__(self):
-        return "<{} stdout:{!r} stderr:{!r}>".format(
+        return "<{0} stdout:{1!r} stderr:{2!r}>".format(
             self.__class__.__name__,
             self._stdout, self._stderr)
 
@@ -395,7 +395,7 @@ class Transform(DelegateBase):
         self._delegate = SafeDelegate.wrap_if_needed(delegate)
 
     def __repr__(self):
-        return "<{} callback:{!r} delegate:{!r}>".format(
+        return "<{0} callback:{1!r} delegate:{2!r}>".format(
             self.__class__.__name__, self._callback, self._delegate)
 
     def on_line(self, stream_name, line):
@@ -423,7 +423,7 @@ class Decode(Transform):
         self._encoding = encoding
 
     def __repr__(self):
-        return "<{} encoding:{!r} delegate:{!r}>".format(
+        return "<{0} encoding:{1!r} delegate:{2!r}>".format(
             self.__class__.__name__, self._encoding, self._delegate)
 
     def _decode(self, stream_name, line):
@@ -449,7 +449,7 @@ class Encode(Transform):
         self._encoding = encoding
 
     def __repr__(self):
-        return "<{} encoding:{!r} delegate:{!r}>".format(
+        return "<{0} encoding:{1!r} delegate:{2!r}>".format(
             self.__class__.__name__, self._encoding, self._delegate)
 
     def _encode(self, stream_name, line):
