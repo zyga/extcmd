@@ -620,22 +620,24 @@ class Decode(Transform):
     bytes on the outside, as it should be. Especially useful in python 3.
     """
 
-    def __init__(self, delegate, encoding='UTF-8'):
+    def __init__(self, delegate, encoding='UTF-8', errors='strict'):
         """
         Set the callback and subsequent delegate.
         """
         super(Decode, self).__init__(self._decode, delegate)
         self._encoding = encoding
+        self._errors = errors
 
     def __repr__(self):
-        return "<{0} encoding:{1!r} delegate:{2!r}>".format(
-            self.__class__.__name__, self._encoding, self._delegate)
+        return "<{0} encoding:{1!r} errors:{2!r} delegate:{3!r}>".format(
+            self.__class__.__name__,
+            self._encoding, self._errors, self._delegate)
 
     def _decode(self, stream_name, line):
         """
-        Decode each line with the configured encoding
+        Decode each line with the configured encoding/errors policy
         """
-        return line.decode(self._encoding)
+        return line.decode(self._encoding, self._errors)
 
 
 class Encode(Transform):
@@ -646,22 +648,24 @@ class Encode(Transform):
     bytes on the outside, as it should be. Especially useful in python 3.
     """
 
-    def __init__(self, delegate, encoding='UTF-8'):
+    def __init__(self, delegate, encoding='UTF-8', errors='strict'):
         """
         Set the callback and subsequent delegate.
         """
         super(Encode, self).__init__(self._encode, delegate)
         self._encoding = encoding
+        self._errors = errors
 
     def __repr__(self):
-        return "<{0} encoding:{1!r} delegate:{2!r}>".format(
-            self.__class__.__name__, self._encoding, self._delegate)
+        return "<{0} encoding:{1!r} errors:{2!r} delegate:{3!r}>".format(
+            self.__class__.__name__,
+            self._encoding, self._errors, self._delegate)
 
     def _encode(self, stream_name, line):
         """
-        Decode each line with the configured encoding
+        Decode each line with the configured encoding/errors policy
         """
-        return line.encode(self._encoding)
+        return line.encode(self._encoding, self._errors)
 
 
 class EncodeInPython2(Encode):

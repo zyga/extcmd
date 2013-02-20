@@ -62,13 +62,13 @@ class ReprTests(unittest.TestCase):
     def test_decode(self):
         obj = extcmd.Decode(delegate=Dummy())
         self.assertEqual(
-            repr(obj), ("<Decode encoding:'UTF-8'"
+            repr(obj), ("<Decode encoding:'UTF-8' errors:'strict'"
                         " delegate:<SafeDelegate wrapping <Dummy>>>"))
 
     def test_encode(self):
         obj = extcmd.Encode(delegate=Dummy())
         self.assertEqual(
-            repr(obj), ("<Encode encoding:'UTF-8'"
+            repr(obj), ("<Encode encoding:'UTF-8' errors:'strict'"
                         " delegate:<SafeDelegate wrapping <Dummy>>>"))
 
 
